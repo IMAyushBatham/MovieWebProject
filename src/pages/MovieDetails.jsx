@@ -1,38 +1,44 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import TrailerModal from "../components/TrailerModal";
-import "./MovieDetails.css";
+import "../css/MovieDetails.css";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
-const IMG_BASE  = "https://image.tmdb.org/t/p/w500";
+const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const fetchMovieDetails = (id) =>
-  fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=en-US`).then((r) => r.json());
+  fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=en-US`).then((r) =>
+    r.json(),
+  );
 
 const fetchMovieCredits = (id) =>
-  fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`).then((r) => r.json());
+  fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`).then((r) =>
+    r.json(),
+  );
 
 const fetchMovieVideos = (id) =>
-  fetch(`${BASE_URL}/movie/${id}/videos?api_key=${API_KEY}`).then((r) => r.json());
+  fetch(`${BASE_URL}/movie/${id}/videos?api_key=${API_KEY}`).then((r) =>
+    r.json(),
+  );
 
 // ── component ─────────────────────────────────────────────────────────────────
 const MovieDetails = () => {
   const { id } = useParams();
 
   // movie data
-  const [movie,   setMovie]   = useState(null);
-  const [cast,    setCast]    = useState([]);
+  const [movie, setMovie] = useState(null);
+  const [cast, setCast] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
 
   // trailer state
-  const [trailerKey,     setTrailerKey]     = useState(null);   // YouTube key
-  const [showTrailer,    setShowTrailer]    = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null); // YouTube key
+  const [showTrailer, setShowTrailer] = useState(false);
   const [trailerLoading, setTrailerLoading] = useState(false);
-  const [trailerFetched, setTrailerFetched] = useState(false);  // avoid duplicate fetches
-  const [noTrailer,      setNoTrailer]      = useState(false);
+  const [trailerFetched, setTrailerFetched] = useState(false); // avoid duplicate fetches
+  const [noTrailer, setNoTrailer] = useState(false);
 
   // ── load movie + cast on mount ──────────────────────────────────────────────
   useEffect(() => {
@@ -62,7 +68,9 @@ const MovieDetails = () => {
     };
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   // ── fetch trailer (on demand) ───────────────────────────────────────────────
@@ -79,7 +87,7 @@ const MovieDetails = () => {
       const data = await fetchMovieVideos(id);
 
       const trailer = data.results?.find(
-        (v) => v.type === "Trailer" && v.site === "YouTube"
+        (v) => v.type === "Trailer" && v.site === "YouTube",
       );
 
       if (trailer) {
@@ -101,23 +109,33 @@ const MovieDetails = () => {
 
   // ── guards ──────────────────────────────────────────────────────────────────
   if (loading) return <div className="md-state">Loading…</div>;
-  if (error)   return <div className="md-state md-state--error">Error: {error}</div>;
-  if (!movie)  return null;
+  if (error)
+    return <div className="md-state md-state--error">Error: {error}</div>;
+  if (!movie) return null;
 
   // derived values
-  const posterUrl   = movie.poster_path   ? `${IMG_BASE}${movie.poster_path}`   : null;
-  const backdropUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}` : null;
-  const year        = movie.release_date?.split("-")[0] ?? "—";
-  const runtime     = movie.runtime ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : "—";
-  const rating      = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
-  const genres      = movie.genres?.map((g) => g.name) ?? [];
+  const posterUrl = movie.poster_path
+    ? `${IMG_BASE}${movie.poster_path}`
+    : null;
+  const backdropUrl = movie.backdrop_path
+    ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+    : null;
+  const year = movie.release_date?.split("-")[0] ?? "—";
+  const runtime = movie.runtime
+    ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
+    : "—";
+  const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
+  const genres = movie.genres?.map((g) => g.name) ?? [];
 
   // ── render ──────────────────────────────────────────────────────────────────
   return (
     <div className="md-page">
       {/* Backdrop hero */}
       {backdropUrl && (
-        <div className="md-hero" style={{ backgroundImage: `url(${backdropUrl})` }}>
+        <div
+          className="md-hero"
+          style={{ backgroundImage: `url(${backdropUrl})` }}
+        >
           <div className="md-hero__overlay" />
         </div>
       )}
@@ -125,10 +143,11 @@ const MovieDetails = () => {
       <div className="md-content">
         {/* Poster */}
         <div className="md-poster">
-          {posterUrl
-            ? <img src={posterUrl} alt={movie.title} loading="lazy" />
-            : <div className="md-poster__placeholder">No Image</div>
-          }
+          {posterUrl ? (
+            <img src={posterUrl} alt={movie.title} loading="lazy" />
+          ) : (
+            <div className="md-poster__placeholder">No Image</div>
+          )}
         </div>
 
         {/* Info */}
@@ -144,7 +163,9 @@ const MovieDetails = () => {
           {genres.length > 0 && (
             <div className="md-info__genres">
               {genres.map((g) => (
-                <span key={g} className="md-genre">{g}</span>
+                <span key={g} className="md-genre">
+                  {g}
+                </span>
               ))}
             </div>
           )}
