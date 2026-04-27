@@ -4,43 +4,45 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import GenreFilter from "../components/GenreFilter";
 import useInfiniteScroll from "../hooks/useInfiniteScroll";
 import { searchMovies } from "../services/api";
-import "./Home.css";
+import "../css/Home.css";
 
-const API_KEY  = import.meta.env.VITE_API_KEY;
+const API_KEY = import.meta.env.VITE_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 
 // ── api helpers ───────────────────────────────────────────────────────────────
 const fetchPopular = (page) =>
-  fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=${page}`)
-    .then((r) => r.json());
+  fetch(
+    `${BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=${page}`,
+  ).then((r) => r.json());
 
 const fetchByGenre = (genreId, page) =>
   fetch(
-    `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=en-US&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`
+    `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=en-US&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`,
   ).then((r) => r.json());
 
 const fetchGenres = () =>
-  fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`)
-    .then((r) => r.json());
+  fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`).then(
+    (r) => r.json(),
+  );
 
 // ── component ─────────────────────────────────────────────────────────────────
 const Home = () => {
   // ── genre state ───────────────────────────────────────
-  const [genres,        setGenres]        = useState([]);
+  const [genres, setGenres] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null); // null = All
 
   // ── movies state ──────────────────────────────────────
-  const [movies,  setMovies]  = useState([]);
-  const [page,    setPage]    = useState(1);
+  const [movies, setMovies] = useState([]);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
 
   // ── search state ──────────────────────────────────────
-  const [searchQuery,   setSearchQuery]   = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [isSearching,   setIsSearching]   = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   // prevent duplicate in-flight fetches
   const fetchingRef = useRef(false);
@@ -76,7 +78,9 @@ const Home = () => {
 
       setMovies((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
-        const fresh = (data.results ?? []).filter((m) => !existingIds.has(m.id));
+        const fresh = (data.results ?? []).filter(
+          (m) => !existingIds.has(m.id),
+        );
         return [...prev, ...fresh];
       });
 
@@ -105,7 +109,7 @@ const Home = () => {
 
   const sentinelRef = useInfiniteScroll(
     handleSentinel,
-    !isSearching && hasMore && !loading
+    !isSearching && hasMore && !loading,
   );
 
   // ── genre select handler ──────────────────────────────
@@ -118,23 +122,43 @@ const Home = () => {
     setSelectedGenre(genreId);
   };
 
-  // ── search handlers ───────────────────────────────────
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (!q) { handleClearSearch(); return; }
-
+  // ── shared search executor ────────────────────────────
+  const runSearch = async (q) => {
     setIsSearching(true);
     setSearchLoading(true);
-
     try {
-      const results = await searchMovies(q);
+      const { results } = await searchMovies(q);
       setSearchResults(results);
     } catch {
       setSearchResults([]);
     } finally {
       setSearchLoading(false);
     }
+  };
+
+  // ── debounced live search ─────────────────────────────
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      if (isSearching) handleClearSearch();
+      return;
+    }
+    setIsSearching(true);
+    setSearchLoading(true);
+    const timer = setTimeout(() => runSearch(q), 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
+  // ── search handlers ───────────────────────────────────
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) {
+      handleClearSearch();
+      return;
+    }
+    runSearch(q);
   };
 
   const handleClearSearch = () => {
@@ -144,14 +168,13 @@ const Home = () => {
   };
 
   // ── derived ───────────────────────────────────────────
-  const displayMovies   = isSearching ? searchResults : movies;
-  const showEmpty       = isSearching && !searchLoading && searchResults.length === 0;
+  const displayMovies = isSearching ? searchResults : movies;
+  const showEmpty = isSearching && !searchLoading && searchResults.length === 0;
   const activeGenreName = genres.find((g) => g.id === selectedGenre)?.name;
 
   // ── render ────────────────────────────────────────────
   return (
     <div className="home-page">
-
       {/* Search bar */}
       <section className="home-search">
         <form onSubmit={handleSearch} className="home-search__form">
@@ -162,9 +185,15 @@ const Home = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="home-search__input"
           />
-          <button type="submit" className="home-search__btn">Search</button>
+          <button type="submit" className="home-search__btn">
+            Search
+          </button>
           {isSearching && (
-            <button type="button" className="home-search__clear" onClick={handleClearSearch}>
+            <button
+              type="button"
+              className="home-search__clear"
+              onClick={handleClearSearch}
+            >
               ✕ Clear
             </button>
           )}
@@ -185,15 +214,17 @@ const Home = () => {
         {isSearching
           ? `Results for "${searchQuery}"`
           : selectedGenre
-          ? `${activeGenreName} Movies`
-          : "Popular Movies"}
+            ? `${activeGenreName} Movies`
+            : "Popular Movies"}
       </h2>
 
       {/* Error */}
       {error && <p className="home-error">Failed to load: {error}</p>}
 
       {/* Empty search */}
-      {showEmpty && <p className="home-empty">No results for "{searchQuery}"</p>}
+      {showEmpty && (
+        <p className="home-empty">No results for "{searchQuery}"</p>
+      )}
 
       {/* Movie grid */}
       {displayMovies.length > 0 && (
@@ -206,7 +237,11 @@ const Home = () => {
 
       {/* Sentinel + spinner — popular/genre only */}
       {!isSearching && (
-        <LoadingSpinner sentinelRef={sentinelRef} loading={loading} hasMore={hasMore} />
+        <LoadingSpinner
+          sentinelRef={sentinelRef}
+          loading={loading}
+          hasMore={hasMore}
+        />
       )}
 
       {/* Search loading */}

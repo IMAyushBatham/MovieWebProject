@@ -1,5 +1,4 @@
-import "./GenreFilter.css";
-
+import "../css/GenreFilter.css";
 /**
  * GenreFilter
  * Props:

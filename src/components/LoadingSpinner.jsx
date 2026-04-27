@@ -1,4 +1,4 @@
-import "./LoadingSpinner.css";
+import "../css/LoadingSpinner.css";
 
 /**
  * LoadingSpinner

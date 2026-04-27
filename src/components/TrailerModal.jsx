@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import "./TrailerModal.css";
+import "../css/TrailerModal.css";
 
 const TrailerModal = ({ trailerKey, onClose }) => {
   // Close on Escape key
@@ -7,7 +7,7 @@ const TrailerModal = ({ trailerKey, onClose }) => {
     (e) => {
       if (e.key === "Escape") onClose();
     },
-    [onClose]
+    [onClose],
   );
 
   useEffect(() => {
@@ -26,12 +26,22 @@ const TrailerModal = ({ trailerKey, onClose }) => {
   };
 
   return (
-    <div className="trailer-backdrop" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label="Movie Trailer">
+    <div
+      className="trailer-backdrop"
+      onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Movie Trailer"
+    >
       <div className="trailer-modal">
         {/* Header */}
         <div className="trailer-modal__header">
           <span className="trailer-modal__label">▶ Official Trailer</span>
-          <button className="trailer-modal__close" onClick={onClose} aria-label="Close trailer">
+          <button
+            className="trailer-modal__close"
+            onClick={onClose}
+            aria-label="Close trailer"
+          >
             ✕
           </button>
         </div>
