@@ -3,7 +3,7 @@
   min-height: 100vh;
   background: #0a0a0a;
   color: #eee;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: "Segoe UI", system-ui, sans-serif;
   position: relative;
   padding-bottom: 4rem;
 }
@@ -88,8 +88,8 @@
 }
 
 .md-badge {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 0.25rem 0.65rem;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -111,8 +111,8 @@
 }
 
 .md-genre {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.2rem 0.7rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -147,7 +147,10 @@
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    opacity 0.15s;
 }
 
 .md-btn:disabled {
@@ -171,11 +174,55 @@
   transform: translateY(0);
 }
 
+.md-btn--reviews {
+  background: rgba(255, 255, 255, 0.08);
+  color: #eee;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  letter-spacing: 0.03em;
+}
+
+.md-btn--reviews:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-2px);
+}
+
+.md-btn--reviews:active {
+  transform: translateY(0);
+}
+
+/* Favourite button on detail page — same shape as MovieCard */
+.favorite-btn--detail {
+  width: 44px;
+  height: 44px;
+  font-size: 1.4rem;
+  background-color: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.15s;
+  flex-shrink: 0;
+}
+
+.favorite-btn--detail:hover {
+  background-color: rgba(232, 69, 60, 0.4);
+  transform: scale(1.1);
+}
+
+.favorite-btn--detail.active {
+  color: #e50914;
+}
+
 /* Spinner inside button */
 .md-btn__spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -183,22 +230,30 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .md-trailer-area__notice {
   font-size: 0.83rem;
   color: #f88;
-  background: rgba(255,100,100,0.08);
-  border: 1px solid rgba(255,100,100,0.2);
+  background: rgba(255, 100, 100, 0.08);
+  border: 1px solid rgba(255, 100, 100, 0.2);
   padding: 0.4rem 0.85rem;
   border-radius: 5px;
   animation: fadeNotice 0.3s ease;
 }
 
 @keyframes fadeNotice {
-  from { opacity: 0; transform: translateX(-6px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* ── Cast section ─────────────────────────────────────── */
@@ -239,7 +294,7 @@
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.08);
+  border: 2px solid rgba(255, 255, 255, 0.08);
   display: block;
   margin-bottom: 0.4rem;
 }
@@ -296,7 +351,9 @@
     text-align: center;
   }
 
-  .md-poster { width: 160px; }
+  .md-poster {
+    width: 160px;
+  }
 
   .md-info__genres,
   .md-info__meta,

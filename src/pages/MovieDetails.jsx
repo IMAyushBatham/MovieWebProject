@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import TrailerModal from "../components/TrailerModal";
+import ReviewsModal from "../components/ReviewsModal";
+import { useMovieContext } from "../contexts/MovieContext";
 import "../css/MovieDetails.css";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -34,11 +36,24 @@ const MovieDetails = () => {
   const [error, setError] = useState(null);
 
   // trailer state
-  const [trailerKey, setTrailerKey] = useState(null); // YouTube key
+  const [trailerKey, setTrailerKey] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailerLoading, setTrailerLoading] = useState(false);
-  const [trailerFetched, setTrailerFetched] = useState(false); // avoid duplicate fetches
+  const [trailerFetched, setTrailerFetched] = useState(false);
   const [noTrailer, setNoTrailer] = useState(false);
+
+  // reviews state
+  const [showReviews, setShowReviews] = useState(false);
+
+  // favorites
+  const { isFavorite, addToFavorites, removeFromFavorites } = useMovieContext();
+  const favorite = movie ? isFavorite(movie.id) : false;
+
+  const handleFavoriteClick = () => {
+    if (!movie) return;
+    if (favorite) removeFromFavorites(movie.id);
+    else addToFavorites(movie);
+  };
 
   // ── load movie + cast on mount ──────────────────────────────────────────────
   useEffect(() => {
@@ -172,8 +187,9 @@ const MovieDetails = () => {
 
           <p className="md-info__overview">{movie.overview}</p>
 
-          {/* ▶ Watch Trailer button */}
+          {/* Buttons row */}
           <div className="md-trailer-area">
+            {/* ▶ Watch Trailer */}
             <button
               className="md-btn md-btn--trailer"
               onClick={handleWatchTrailer}
@@ -187,6 +203,25 @@ const MovieDetails = () => {
               ) : (
                 <>▶ Watch Trailer</>
               )}
+            </button>
+
+            {/* ★ Reviews */}
+            <button
+              className="md-btn md-btn--reviews"
+              onClick={() => setShowReviews(true)}
+            >
+              ★ Reviews
+            </button>
+
+            {/* ♥ Favorite */}
+            <button
+              className={`favorite-btn favorite-btn--detail ${favorite ? "active" : ""}`}
+              onClick={handleFavoriteClick}
+              aria-label={
+                favorite ? "Remove from favorites" : "Add to favorites"
+              }
+            >
+              {favorite ? "♥" : "♡"}
             </button>
 
             {/* "No trailer" feedback */}
@@ -228,6 +263,15 @@ const MovieDetails = () => {
         <TrailerModal
           trailerKey={trailerKey}
           onClose={() => setShowTrailer(false)}
+        />
+      )}
+
+      {/* Reviews modal */}
+      {showReviews && (
+        <ReviewsModal
+          movieId={id}
+          movieTitle={movie.title}
+          onClose={() => setShowReviews(false)}
         />
       )}
     </div>
