@@ -1,220 +1,237 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { getMovieDetails } from "../services/api";
-import { useMovieContext } from "../contexts/MovieContext";
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import TrailerModal from "../components/TrailerModal";
 import "../css/MovieDetails.css";
 
-const IMG_BASE = "https://image.tmdb.org/t/p/";
+const API_KEY = import.meta.env.VITE_API_KEY;
+const BASE_URL = "https://api.themoviedb.org/3";
+const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
-function MovieDetails() {
+// ── helpers ──────────────────────────────────────────────────────────────────
+const fetchMovieDetails = (id) =>
+  fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=en-US`).then((r) =>
+    r.json(),
+  );
+
+const fetchMovieCredits = (id) =>
+  fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`).then((r) =>
+    r.json(),
+  );
+
+const fetchMovieVideos = (id) =>
+  fetch(`${BASE_URL}/movie/${id}/videos?api_key=${API_KEY}`).then((r) =>
+    r.json(),
+  );
+
+// ── component ─────────────────────────────────────────────────────────────────
+const MovieDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { isFavorite, addToFavorites, removeFromFavorites } = useMovieContext();
 
+  // movie data
   const [movie, setMovie] = useState(null);
+  const [cast, setCast] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [trailerKey, setTrailerKey] = useState(null);
-  const [showTrailer, setShowTrailer] = useState(false);
 
+  // trailer state
+  const [trailerKey, setTrailerKey] = useState(null); // YouTube key
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerLoading, setTrailerLoading] = useState(false);
+  const [trailerFetched, setTrailerFetched] = useState(false); // avoid duplicate fetches
+  const [noTrailer, setNoTrailer] = useState(false);
+
+  // ── load movie + cast on mount ──────────────────────────────────────────────
   useEffect(() => {
-    window.scrollTo(0, 0);
-    const fetchDetails = async () => {
+    let cancelled = false;
+
+    const load = async () => {
       setLoading(true);
       setError(null);
-      try {
-        const data = await getMovieDetails(id);
-        setMovie(data);
 
-        // Find official trailer
-        const trailer = data.videos?.results?.find(
-          (v) => v.type === "Trailer" && v.site === "YouTube"
-        );
-        if (trailer) setTrailerKey(trailer.key);
+      try {
+        const [details, credits] = await Promise.all([
+          fetchMovieDetails(id),
+          fetchMovieCredits(id),
+        ]);
+
+        if (cancelled) return;
+
+        if (details.success === false) throw new Error("Movie not found");
+
+        setMovie(details);
+        setCast(credits.cast?.slice(0, 10) ?? []);
       } catch (err) {
-        console.error(err);
-        setError("Could not load movie details.");
+        if (!cancelled) setError(err.message);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-    fetchDetails();
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="details-loading">
-        <div className="spinner" />
-        <p>Loading movie details...</p>
-      </div>
-    );
-  }
+  // ── fetch trailer (on demand) ───────────────────────────────────────────────
+  const handleWatchTrailer = useCallback(async () => {
+    // If we already know the key (or know there's none), act immediately
+    if (trailerFetched) {
+      if (trailerKey) setShowTrailer(true);
+      return;
+    }
 
-  if (error) {
-    return (
-      <div className="details-error">
-        <p>⚠️ {error}</p>
-        <button onClick={() => navigate(-1)} className="back-btn">
-          ← Go Back
-        </button>
-      </div>
-    );
-  }
+    setTrailerLoading(true);
 
+    try {
+      const data = await fetchMovieVideos(id);
+
+      const trailer = data.results?.find(
+        (v) => v.type === "Trailer" && v.site === "YouTube",
+      );
+
+      if (trailer) {
+        setTrailerKey(trailer.key);
+        setShowTrailer(true);
+      } else {
+        setNoTrailer(true);
+        // Auto-clear the "no trailer" message after 3 s
+        setTimeout(() => setNoTrailer(false), 3000);
+      }
+    } catch {
+      setNoTrailer(true);
+      setTimeout(() => setNoTrailer(false), 3000);
+    } finally {
+      setTrailerLoading(false);
+      setTrailerFetched(true);
+    }
+  }, [id, trailerFetched, trailerKey]);
+
+  // ── guards ──────────────────────────────────────────────────────────────────
+  if (loading) return <div className="md-state">Loading…</div>;
+  if (error)
+    return <div className="md-state md-state--error">Error: {error}</div>;
   if (!movie) return null;
 
-  const favorite = isFavorite(movie.id);
-  const cast = movie.credits?.cast?.slice(0, 8) || [];
-  const releaseYear = movie.release_date?.split("-")[0];
+  // derived values
+  const posterUrl = movie.poster_path
+    ? `${IMG_BASE}${movie.poster_path}`
+    : null;
+  const backdropUrl = movie.backdrop_path
+    ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+    : null;
+  const year = movie.release_date?.split("-")[0] ?? "—";
   const runtime = movie.runtime
     ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
-    : null;
-  const rating = movie.vote_average?.toFixed(1);
+    : "—";
+  const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
+  const genres = movie.genres?.map((g) => g.name) ?? [];
 
-  const toggleFavorite = () => {
-    if (favorite) removeFromFavorites(movie.id);
-    else addToFavorites(movie);
-  };
-
+  // ── render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="movie-details">
-      {/* Hero backdrop */}
-      {movie.backdrop_path && (
+    <div className="md-page">
+      {/* Backdrop hero */}
+      {backdropUrl && (
         <div
-          className="details-backdrop"
-          style={{
-            backgroundImage: `url(${IMG_BASE}w1280${movie.backdrop_path})`,
-          }}
+          className="md-hero"
+          style={{ backgroundImage: `url(${backdropUrl})` }}
         >
-          <div className="backdrop-overlay" />
+          <div className="md-hero__overlay" />
         </div>
       )}
 
-      <div className="details-container">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
-
-        <div className="details-main">
-          {/* Poster */}
-          <div className="details-poster">
-            <img
-              src={
-                movie.poster_path
-                  ? `${IMG_BASE}w500${movie.poster_path}`
-                  : "https://via.placeholder.com/500x750?text=No+Image"
-              }
-              alt={movie.title}
-            />
-          </div>
-
-          {/* Info */}
-          <div className="details-info">
-            <h1 className="details-title">{movie.title}</h1>
-
-            {movie.tagline && (
-              <p className="details-tagline">"{movie.tagline}"</p>
-            )}
-
-            <div className="details-meta">
-              {releaseYear && <span className="meta-chip">{releaseYear}</span>}
-              {runtime && <span className="meta-chip">{runtime}</span>}
-              {rating && (
-                <span className="meta-chip rating-chip">
-                  ⭐ {rating} / 10
-                </span>
-              )}
-              <span className="meta-chip">
-                {movie.vote_count?.toLocaleString()} votes
-              </span>
-            </div>
-
-            {/* Genres */}
-            {movie.genres?.length > 0 && (
-              <div className="details-genres">
-                {movie.genres.map((g) => (
-                  <span key={g.id} className="genre-tag">
-                    {g.name}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Overview */}
-            <div className="details-overview">
-              <h3>Overview</h3>
-              <p>{movie.overview || "No overview available."}</p>
-            </div>
-
-            {/* Actions */}
-            <div className="details-actions">
-              <button
-                className={`fav-toggle-btn ${favorite ? "active" : ""}`}
-                onClick={toggleFavorite}
-              >
-                {favorite ? "♥ In Favorites" : "♡ Add to Favorites"}
-              </button>
-
-              {trailerKey && (
-                <button
-                  className="trailer-btn"
-                  onClick={() => setShowTrailer(true)}
-                >
-                  ▶ Watch Trailer
-                </button>
-              )}
-            </div>
-          </div>
+      <div className="md-content">
+        {/* Poster */}
+        <div className="md-poster">
+          {posterUrl ? (
+            <img src={posterUrl} alt={movie.title} loading="lazy" />
+          ) : (
+            <div className="md-poster__placeholder">No Image</div>
+          )}
         </div>
 
-        {/* Cast */}
-        {cast.length > 0 && (
-          <div className="details-cast">
-            <h3>Top Cast</h3>
-            <div className="cast-grid">
-              {cast.map((member) => (
-                <div key={member.id} className="cast-card">
-                  <img
-                    src={
-                      member.profile_path
-                        ? `${IMG_BASE}w185${member.profile_path}`
-                        : "https://via.placeholder.com/185x278?text=N/A"
-                    }
-                    alt={member.name}
-                  />
-                  <p className="cast-name">{member.name}</p>
-                  <p className="cast-character">{member.character}</p>
-                </div>
+        {/* Info */}
+        <div className="md-info">
+          <h1 className="md-info__title">{movie.title}</h1>
+
+          <div className="md-info__meta">
+            <span className="md-badge md-badge--rating">⭐ {rating}</span>
+            <span className="md-badge">{year}</span>
+            <span className="md-badge">{runtime}</span>
+          </div>
+
+          {genres.length > 0 && (
+            <div className="md-info__genres">
+              {genres.map((g) => (
+                <span key={g} className="md-genre">
+                  {g}
+                </span>
               ))}
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Trailer Modal */}
-      {showTrailer && trailerKey && (
-        <div className="trailer-modal" onClick={() => setShowTrailer(false)}>
-          <div
-            className="trailer-inner"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <p className="md-info__overview">{movie.overview}</p>
+
+          {/* ▶ Watch Trailer button */}
+          <div className="md-trailer-area">
             <button
-              className="modal-close"
-              onClick={() => setShowTrailer(false)}
+              className="md-btn md-btn--trailer"
+              onClick={handleWatchTrailer}
+              disabled={trailerLoading}
             >
-              ✕
+              {trailerLoading ? (
+                <>
+                  <span className="md-btn__spinner" />
+                  Loading…
+                </>
+              ) : (
+                <>▶ Watch Trailer</>
+              )}
             </button>
-            <iframe
-              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
-              title="Movie Trailer"
-              allowFullScreen
-              allow="autoplay; encrypted-media"
-            />
+
+            {/* "No trailer" feedback */}
+            {noTrailer && (
+              <span className="md-trailer-area__notice">
+                Trailer not available for this title.
+              </span>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* Cast row */}
+      {cast.length > 0 && (
+        <section className="md-cast">
+          <h2 className="md-cast__heading">Top Cast</h2>
+          <div className="md-cast__grid">
+            {cast.map((actor) => (
+              <div key={actor.id} className="md-cast__card">
+                {actor.profile_path ? (
+                  <img
+                    src={`https://image.tmdb.org/t/p/w185${actor.profile_path}`}
+                    alt={actor.name}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="md-cast__no-photo">👤</div>
+                )}
+                <p className="md-cast__name">{actor.name}</p>
+                <p className="md-cast__char">{actor.character}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Trailer modal */}
+      {showTrailer && trailerKey && (
+        <TrailerModal
+          trailerKey={trailerKey}
+          onClose={() => setShowTrailer(false)}
+        />
       )}
     </div>
   );
-}
+};
 
 export default MovieDetails;
