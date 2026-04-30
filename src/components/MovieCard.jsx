@@ -25,7 +25,9 @@ function MovieCard({ movie }) {
         <div className="movie-poster">
           <img
             src={
-              movie.poster_path ? `${IMG_BASE}${movie.poster_path}` : PLACEHOLDER
+              movie.poster_path
+                ? `${IMG_BASE}${movie.poster_path}`
+                : PLACEHOLDER
             }
             alt={movie.title}
             loading="lazy"
@@ -34,7 +36,9 @@ function MovieCard({ movie }) {
             <button
               className={`favorite-btn ${favorite ? "active" : ""}`}
               onClick={onFavoriteClick}
-              aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+              aria-label={
+                favorite ? "Remove from favorites" : "Add to favorites"
+              }
             >
               {favorite ? "♥" : "♡"}
             </button>
