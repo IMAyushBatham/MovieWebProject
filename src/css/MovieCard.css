@@ -156,3 +156,18 @@
     font-size: 0.72rem;
   }
 }
+
+@media (max-width: 600px) {
+  .movie-poster {
+    aspect-ratio: 2 / 2.5;
+  }
+  .movie-info {
+    padding: 0.5rem 0.6rem;
+  }
+  .movie-info h3 {
+    font-size: 0.78rem;
+  }
+  .release-year {
+    font-size: 0.68rem;
+  }
+}
