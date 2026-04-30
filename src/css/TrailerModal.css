@@ -12,13 +12,16 @@
   justify-content: center;
   padding: 1rem;
 
-  /* Fade in */
   animation: backdropIn 0.25s ease forwards;
 }
 
 @keyframes backdropIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ── Modal Shell ──────────────────────────────────────── */
@@ -33,7 +36,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.04),
     0 40px 80px rgba(0, 0, 0, 0.7);
 
-  /* Scale + fade in */
   animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
@@ -63,7 +65,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #e50914;           /* Netflix-red accent */
+  color: #e50914;
 }
 
 .trailer-modal__close {
@@ -78,7 +80,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.15s;
   line-height: 1;
 }
 
@@ -92,7 +97,7 @@
 .trailer-modal__player {
   position: relative;
   width: 100%;
-  padding-top: 56.25%;  /* 16:9 */
+  padding-top: 56.25%; /* 16:9 */
   background: #000;
 }
 
@@ -104,27 +109,48 @@
   border: none;
 }
 
-/* ── Responsive ───────────────────────────────────────── */
+/* ── Mobile ───────────────────────────────────────────── */
 @media (max-width: 600px) {
   .trailer-backdrop {
     padding: 0;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
   }
 
   .trailer-modal {
-    border-radius: 16px 16px 0 0;
+    width: calc(100% - 1rem);
     max-width: 100%;
+    border-radius: 12px;
     animation: modalInMobile 0.3s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
   }
 
   @keyframes modalInMobile {
     from {
       opacity: 0;
-      transform: translateY(60px);
+      transform: scale(0.92);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: scale(1);
     }
+  }
+
+  .trailer-modal__header {
+    padding: 0.65rem 1rem;
+  }
+
+  .trailer-modal__label {
+    font-size: 0.72rem;
+  }
+
+  .trailer-modal__close {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  /* Keep 16:9 ratio — player fills available width */
+  .trailer-modal__player {
+    padding-top: 56.25%;
   }
 }
