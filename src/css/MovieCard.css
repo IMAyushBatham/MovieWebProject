@@ -9,7 +9,9 @@
   border-radius: 10px;
   overflow: hidden;
   background-color: var(--bg-card);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
   height: 100%;
   width: 100%;
   display: flex;
@@ -72,7 +74,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, transform 0.15s;
+  transition:
+    background-color 0.2s,
+    transform 0.15s;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -116,4 +120,43 @@
 .release-year {
   color: var(--text-muted);
   font-size: 0.82rem;
+}
+
+/* ── Mobile: always show overlay (no hover on touch) ── */
+@media (hover: none) and (pointer: coarse) {
+  .movie-overlay {
+    opacity: 1;
+    background: linear-gradient(
+      to bottom,
+      transparent 55%,
+      rgba(0, 0, 0, 0.85) 100%
+    );
+  }
+
+  .movie-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .movie-card:hover .movie-poster img {
+    transform: none;
+  }
+
+  .favorite-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+  }
+
+  .movie-info {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .movie-info h3 {
+    font-size: 0.82rem;
+  }
+
+  .release-year {
+    font-size: 0.72rem;
+  }
 }
