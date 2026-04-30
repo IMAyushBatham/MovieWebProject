@@ -91,3 +91,9 @@ img {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Prevent horizontal overflow on mobile */
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}

@@ -1,11 +1,11 @@
 /* ── Scroll wrapper ───────────────────────────────────── */
 .gf-wrapper {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   margin-bottom: 1.5rem;
-  /* Subtle fade edges to hint scrollability */
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
@@ -21,16 +21,14 @@
     transparent 100%
   );
 }
-.gf-wrapper::-webkit-scrollbar {
-  display: none;
-}
+.gf-wrapper::-webkit-scrollbar { display: none; }
 
 /* ── Pill track ───────────────────────────────────────── */
 .gf-track {
   display: flex;
   gap: 0.5rem;
   padding: 0.25rem 0.5rem;
-  width: max-content; /* don't wrap — scroll horizontally */
+  width: max-content;
 }
 
 /* ── Individual pill ──────────────────────────────────── */
@@ -45,21 +43,14 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background 0.18s,
-    color 0.18s,
-    border-color 0.18s,
-    transform 0.12s;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
 }
-
 .gf-pill:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
 }
-
-/* Active state */
 .gf-pill--active {
   background: #e50914;
   border-color: #e50914;
@@ -67,7 +58,6 @@
   font-weight: 600;
   box-shadow: 0 4px 14px rgba(229, 9, 20, 0.35);
 }
-
 .gf-pill--active:hover {
   background: #c8000f;
   border-color: #c8000f;
