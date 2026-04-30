@@ -40,23 +40,26 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html {
   overflow-x: hidden;
-  scroll-behavior: smooth;
+  max-width: 100vw;
 }
 
 body {
   width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
   background-color: var(--bg-primary);
+  overflow-x: hidden;
 }
 
 #root {
   width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 a {
@@ -90,10 +93,4 @@ img {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
-}
-
-/* Prevent horizontal overflow on mobile */
-html, body, #root {
-  max-width: 100vw;
-  overflow-x: hidden;
 }
