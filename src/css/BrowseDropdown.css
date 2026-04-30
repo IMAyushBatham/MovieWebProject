@@ -1,0 +1,217 @@
+/* ── Trigger button ───────────────────────────────────── */
+.browse-dropdown {
+  position: relative;
+}
+
+.browse-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary, #aaa);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.2s;
+  white-space: nowrap;
+  position: relative;
+  letter-spacing: 0.3px;
+}
+
+.browse-trigger:hover {
+  color: var(--text-primary, #fff);
+  background: var(--bg-elevated, rgba(255, 255, 255, 0.06));
+}
+
+.browse-trigger--open {
+  color: var(--accent, #e50914);
+  background: var(--accent-muted, rgba(229, 9, 20, 0.1));
+}
+
+.browse-trigger--active {
+  color: var(--accent, #e50914);
+  background: var(--accent-muted, rgba(229, 9, 20, 0.1));
+}
+
+.browse-trigger__icon {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* Red dot indicator when filters are active */
+.browse-trigger__dot {
+  width: 6px;
+  height: 6px;
+  background: #e50914;
+  border-radius: 50%;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.browse-trigger__chevron {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.browse-trigger__chevron.up {
+  transform: rotate(180deg);
+}
+
+/* ── Panel ────────────────────────────────────────────── */
+.browse-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 300;
+  width: 360px;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  animation: browsePanelIn 0.2s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+}
+
+@keyframes browsePanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Section ──────────────────────────────────────────── */
+.browse-section {
+  padding: 0.9rem 1rem 0.75rem;
+}
+
+.browse-section__heading {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #555;
+  margin: 0 0 0.6rem;
+}
+
+/* ── Pills ────────────────────────────────────────────── */
+.browse-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.browse-pills--genres {
+  max-height: 110px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #333 transparent;
+}
+
+.browse-pill {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #aaa;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
+}
+
+.browse-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.browse-pill--active {
+  background: #e50914;
+  border-color: #e50914;
+  color: #fff;
+  font-weight: 600;
+}
+
+.browse-pill--active:hover {
+  background: #c8000f;
+  border-color: #c8000f;
+}
+
+/* ── Divider ──────────────────────────────────────────── */
+.browse-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0;
+}
+
+/* ── Footer ───────────────────────────────────────────── */
+.browse-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0d0d0d;
+}
+
+.browse-footer__clear {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.35rem 0.6rem;
+  border-radius: 5px;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.browse-footer__clear:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.browse-footer__apply {
+  background: #e50914;
+  color: #fff;
+  border: none;
+  padding: 0.45rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+
+.browse-footer__apply:hover {
+  background: #c8000f;
+  transform: translateY(-1px);
+}
+
+/* ── Mobile — panel full width ────────────────────────── */
+@media (max-width: 540px) {
+  .browse-panel {
+    width: calc(100vw - 2rem);
+    right: -1rem;
+  }
+}

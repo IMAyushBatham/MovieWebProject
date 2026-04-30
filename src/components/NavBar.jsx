@@ -1,15 +1,28 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useBrowse } from "../contexts/BrowseContext";
+import BrowseDropdown from "./BrowseDropdown";
 import "../css/Navbar.css";
+
+const API_KEY = import.meta.env.VITE_API_KEY;
+const BASE_URL = "https://api.themoviedb.org/3";
 
 function NavBar() {
   const { currentUser, logout } = useAuth();
+  const { activeFilter, activeSort, applyBrowse, clearBrowse } = useBrowse();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [genres, setGenres] = useState([]);
   const menuRef = useRef(null);
 
-  // Close dropdown when clicking outside
+  useEffect(() => {
+    fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`)
+      .then((r) => r.json())
+      .then((data) => setGenres(data.genres ?? []))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -42,6 +55,15 @@ function NavBar() {
         >
           Home
         </NavLink>
+
+        {/* Browse dropdown — right next to Home */}
+        <BrowseDropdown
+          genres={genres}
+          activeFilter={activeFilter}
+          activeSort={activeSort}
+          onApply={applyBrowse}
+          onClear={clearBrowse}
+        />
 
         {currentUser && (
           <NavLink

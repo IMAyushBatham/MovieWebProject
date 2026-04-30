@@ -77,6 +77,27 @@
   border-color: #555;
 }
 
+/* ── Smart search hint ────────────────────────────────── */
+.home-smart-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: #e50914;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  animation: smartHintIn 0.3s ease forwards;
+}
+
+@keyframes smartHintIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Section heading ──────────────────────────────────── */
 .home-heading {
   font-size: 1rem;

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import MovieCard from "../components/MovieCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import GenreFilter from "../components/GenreFilter";
+import { useBrowse } from "../contexts/BrowseContext";
+import { REGIONS } from "../components/BrowseDropdown";
 import useInfiniteScroll from "../hooks/useInfiniteScroll";
 import { searchMovies } from "../services/api";
 import "../css/Home.css";
@@ -9,15 +11,47 @@ import "../css/Home.css";
 const API_KEY = import.meta.env.VITE_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 
-// ── api helpers ───────────────────────────────────────────────────────────────
-const fetchPopular = (page) =>
+// ── Smart Search keyword map ───────────────────────────────────────────────────
+const SMART_KEYWORDS = {
+  anime: { type: "language", value: "ja" },
+  bollywood: { type: "language", value: "hi" },
+  hollywood: { type: "language", value: "en" },
+  korean: { type: "language", value: "ko" },
+  "k-drama": { type: "language", value: "ko" },
+  kdrama: { type: "language", value: "ko" },
+  hindi: { type: "language", value: "hi" },
+  japanese: { type: "language", value: "ja" },
+  action: { type: "genre", value: 28 },
+  adventure: { type: "genre", value: 12 },
+  animation: { type: "genre", value: 16 },
+  comedy: { type: "genre", value: 35 },
+  crime: { type: "genre", value: 80 },
+  documentary: { type: "genre", value: 99 },
+  drama: { type: "genre", value: 18 },
+  fantasy: { type: "genre", value: 14 },
+  horror: { type: "genre", value: 27 },
+  mystery: { type: "genre", value: 9648 },
+  romance: { type: "genre", value: 10749 },
+  "sci-fi": { type: "genre", value: 878 },
+  scifi: { type: "genre", value: 878 },
+  thriller: { type: "genre", value: 53 },
+  western: { type: "genre", value: 37 },
+};
+
+// ── API helpers ───────────────────────────────────────────────────────────────
+const fetchPopular = (page, sort = "popularity.desc") =>
   fetch(
-    `${BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=${page}`,
+    `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=en-US&sort_by=${sort}&page=${page}`,
   ).then((r) => r.json());
 
-const fetchByGenre = (genreId, page) =>
+const fetchByGenre = (genreId, page, sort = "popularity.desc") =>
   fetch(
-    `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=en-US&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`,
+    `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=en-US&with_genres=${genreId}&sort_by=${sort}&page=${page}`,
+  ).then((r) => r.json());
+
+const fetchByLanguage = (lang, page, sort = "popularity.desc") =>
+  fetch(
+    `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_original_language=${lang}&sort_by=${sort}&page=${page}`,
   ).then((r) => r.json());
 
 const fetchGenres = () =>
@@ -27,63 +61,57 @@ const fetchGenres = () =>
 
 // ── component ─────────────────────────────────────────────────────────────────
 const Home = () => {
-  // ── genre state ───────────────────────────────────────
-  const [genres, setGenres] = useState([]);
-  const [selectedGenre, setSelectedGenre] = useState(null); // null = All
+  // Browse state comes from context (controlled by NavBar)
+  const { activeFilter, activeSort, applyBrowse, clearBrowse } = useBrowse();
 
-  // ── movies state ──────────────────────────────────────
+  const [genres, setGenres] = useState([]);
+  const [selectedGenre, setSelectedGenre] = useState(null);
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
-
-  // ── search state ──────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-
-  // prevent duplicate in-flight fetches
+  const [smartHint, setSmartHint] = useState("");
   const fetchingRef = useRef(false);
 
-  // ── fetch genres once on mount ────────────────────────
   useEffect(() => {
     fetchGenres()
       .then((data) => setGenres(data.genres ?? []))
       .catch(() => {});
   }, []);
 
-  // ── reset + reload when genre changes ────────────────
+  // Reset movies when any filter changes
   useEffect(() => {
     setMovies([]);
     setPage(1);
     setHasMore(true);
     setError(null);
     fetchingRef.current = false;
-  }, [selectedGenre]);
+  }, [selectedGenre, activeFilter, activeSort]);
 
-  // ── load more movies (popular or by genre) ────────────
   const loadMore = useCallback(async () => {
     if (fetchingRef.current || !hasMore) return;
-
     fetchingRef.current = true;
     setLoading(true);
     setError(null);
-
     try {
-      const data = selectedGenre
-        ? await fetchByGenre(selectedGenre, page)
-        : await fetchPopular(page);
+      let data;
+      if (activeFilter?.type === "language")
+        data = await fetchByLanguage(activeFilter.value, page, activeSort);
+      else if (activeFilter?.type === "genre")
+        data = await fetchByGenre(activeFilter.value, page, activeSort);
+      else if (selectedGenre)
+        data = await fetchByGenre(selectedGenre, page, activeSort);
+      else data = await fetchPopular(page, activeSort);
 
       setMovies((prev) => {
-        const existingIds = new Set(prev.map((m) => m.id));
-        const fresh = (data.results ?? []).filter(
-          (m) => !existingIds.has(m.id),
-        );
-        return [...prev, ...fresh];
+        const ids = new Set(prev.map((m) => m.id));
+        return [...prev, ...(data.results ?? []).filter((m) => !ids.has(m.id))];
       });
-
       setHasMore(page < (data.total_pages ?? 1));
       setPage((p) => p + 1);
     } catch (err) {
@@ -92,17 +120,13 @@ const Home = () => {
       setLoading(false);
       fetchingRef.current = false;
     }
-  }, [page, hasMore, selectedGenre]);
+  }, [page, hasMore, selectedGenre, activeFilter, activeSort]);
 
-  // load first page whenever movies resets to []
   useEffect(() => {
-    if (movies.length === 0 && hasMore && !isSearching) {
-      loadMore();
-    }
+    if (movies.length === 0 && hasMore && !isSearching) loadMore();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movies]);
 
-  // ── infinite scroll sentinel ──────────────────────────
   const handleSentinel = useCallback(() => {
     if (!isSearching) loadMore();
   }, [isSearching, loadMore]);
@@ -112,17 +136,6 @@ const Home = () => {
     !isSearching && hasMore && !loading,
   );
 
-  // ── genre select handler ──────────────────────────────
-  const handleGenreSelect = (genreId) => {
-    if (isSearching) {
-      setIsSearching(false);
-      setSearchQuery("");
-      setSearchResults([]);
-    }
-    setSelectedGenre(genreId);
-  };
-
-  // ── shared search executor ────────────────────────────
   const runSearch = async (q) => {
     setIsSearching(true);
     setSearchLoading(true);
@@ -136,13 +149,32 @@ const Home = () => {
     }
   };
 
-  // ── debounced live search ─────────────────────────────
+  // Smart keyword detection + debounced search
   useEffect(() => {
     const q = searchQuery.trim();
     if (!q) {
       if (isSearching) handleClearSearch();
       return;
     }
+
+    const match = SMART_KEYWORDS[q.toLowerCase()];
+    if (match) {
+      const regionLabel = REGIONS.find((r) => r.value === match.value)?.label;
+      const genreLabel = genres.find((g) => g.id === match.value)?.name;
+      setSmartHint(`Showing ${regionLabel ?? genreLabel ?? q} movies`);
+      setIsSearching(false);
+      setSearchQuery("");
+      setSearchResults([]);
+      setSelectedGenre(null);
+      applyBrowse(
+        match.type === "language"
+          ? { region: match.value, genre: null, sort: activeSort }
+          : { genre: match.value, region: null, sort: activeSort },
+      );
+      return;
+    }
+
+    setSmartHint("");
     setIsSearching(true);
     setSearchLoading(true);
     const timer = setTimeout(() => runSearch(q), 400);
@@ -150,7 +182,12 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  // ── search handlers ───────────────────────────────────
+  useEffect(() => {
+    if (!smartHint) return;
+    const t = setTimeout(() => setSmartHint(""), 3000);
+    return () => clearTimeout(t);
+  }, [smartHint]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     const q = searchQuery.trim();
@@ -158,21 +195,35 @@ const Home = () => {
       handleClearSearch();
       return;
     }
-    runSearch(q);
+    if (!SMART_KEYWORDS[q.toLowerCase()]) runSearch(q);
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
     setSearchResults([]);
     setIsSearching(false);
+    setSmartHint("");
   };
 
-  // ── derived ───────────────────────────────────────────
+  const handleGenreSelect = (genreId) => {
+    if (isSearching) handleClearSearch();
+    clearBrowse(); // clear navbar browse filter when using genre pills
+    setSelectedGenre(genreId);
+  };
+
   const displayMovies = isSearching ? searchResults : movies;
   const showEmpty = isSearching && !searchLoading && searchResults.length === 0;
-  const activeGenreName = genres.find((g) => g.id === selectedGenre)?.name;
 
-  // ── render ────────────────────────────────────────────
+  const heading = isSearching
+    ? `Results for "${searchQuery}"`
+    : activeFilter?.type === "language"
+      ? `${REGIONS.find((r) => r.value === activeFilter.value)?.label ?? ""} Movies`
+      : activeFilter?.type === "genre"
+        ? `${genres.find((g) => g.id === activeFilter.value)?.name ?? ""} Movies`
+        : selectedGenre
+          ? `${genres.find((g) => g.id === selectedGenre)?.name ?? ""} Movies`
+          : "Popular Movies";
+
   return (
     <div className="home-page">
       {/* Search bar */}
@@ -180,7 +231,7 @@ const Home = () => {
         <form onSubmit={handleSearch} className="home-search__form">
           <input
             type="text"
-            placeholder="Search for a movie…"
+            placeholder='Search movies or type "Anime", "Bollywood"…'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="home-search__input"
@@ -198,35 +249,23 @@ const Home = () => {
             </button>
           )}
         </form>
+        {smartHint && <p className="home-smart-hint">✦ {smartHint}</p>}
       </section>
 
-      {/* Genre filter pills — hidden during search */}
       {!isSearching && (
         <GenreFilter
           genres={genres}
-          selectedGenre={selectedGenre}
+          selectedGenre={activeFilter ? null : selectedGenre}
           onSelect={handleGenreSelect}
         />
       )}
 
-      {/* Section heading */}
-      <h2 className="home-heading">
-        {isSearching
-          ? `Results for "${searchQuery}"`
-          : selectedGenre
-            ? `${activeGenreName} Movies`
-            : "Popular Movies"}
-      </h2>
-
-      {/* Error */}
+      <h2 className="home-heading">{heading}</h2>
       {error && <p className="home-error">Failed to load: {error}</p>}
-
-      {/* Empty search */}
       {showEmpty && (
         <p className="home-empty">No results for "{searchQuery}"</p>
       )}
 
-      {/* Movie grid */}
       {displayMovies.length > 0 && (
         <div className="home-grid">
           {displayMovies.map((movie) => (
@@ -235,7 +274,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* Sentinel + spinner — popular/genre only */}
       {!isSearching && (
         <LoadingSpinner
           sentinelRef={sentinelRef}
@@ -243,8 +281,6 @@ const Home = () => {
           hasMore={hasMore}
         />
       )}
-
-      {/* Search loading */}
       {isSearching && searchLoading && (
         <LoadingSpinner sentinelRef={null} loading={true} hasMore={true} />
       )}
