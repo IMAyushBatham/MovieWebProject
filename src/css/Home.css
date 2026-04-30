@@ -32,12 +32,8 @@
   transition: border-color 0.2s;
 }
 
-.home-search__input::placeholder {
-  color: #555;
-}
-.home-search__input:focus {
-  border-color: #e50914;
-}
+.home-search__input::placeholder { color: #555; }
+.home-search__input:focus { border-color: #e50914; }
 
 .home-search__btn {
   padding: 0.7rem 1.4rem;
@@ -48,9 +44,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    transform 0.15s;
+  transition: background 0.2s, transform 0.15s;
 }
 .home-search__btn:hover {
   background: #c8000f;
@@ -65,14 +59,9 @@
   border-radius: 6px;
   font-size: 0.85rem;
   cursor: pointer;
-  transition:
-    color 0.2s,
-    border-color 0.2s;
+  transition: color 0.2s, border-color 0.2s;
 }
-.home-search__clear:hover {
-  color: #fff;
-  border-color: #555;
-}
+.home-search__clear:hover { color: #fff; border-color: #555; }
 
 /* ── Section heading ──────────────────────────────────── */
 .home-heading {
